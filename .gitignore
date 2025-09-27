@@ -1,7 +1,0 @@
-node_modules/
-dist/
-*.log
-.DS_Store
-*.tsbuildinfo
-ios/Pods/
-android/app/build/

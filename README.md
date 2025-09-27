@@ -412,5 +412,5 @@ Apache License 2.0
 
 ## Documentation
 
-- [API Documentation](./docs/) - Generated TypeDoc documentation for all classes, interfaces, and functions.
+- [📚 API Documentation](https://sitharaj88.github.io/rn-structured-logger/) - Generated TypeDoc documentation for all classes, interfaces, and functions.
 - [Demo App](./NativeDemo/) - Bare React Native demo application showcasing the library features.

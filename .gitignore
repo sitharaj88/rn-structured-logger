@@ -5,4 +5,3 @@ dist/
 *.tsbuildinfo
 ios/Pods/
 android/app/build/
-NativeDemo/

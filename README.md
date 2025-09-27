@@ -5,6 +5,8 @@
 
 **📚 For detailed guides, API reference, and examples, visit our [documentation site](https://sitharaj88.github.io/rn-structured-logger/).**
 
+**📦 NPM Package:** [https://www.npmjs.com/package/rn-structured-logger](https://www.npmjs.com/package/rn-structured-logger)
+
 An enterprise-grade logging library for React Native, Expo, and cross-platform JavaScript applications. It provides structured logs, namespaces, context injection, batching, rate limiting, and redaction out of the box. Logs are batched and flushed asynchronously to reduce impact on the UI thread and can be persisted locally or forwarded to remote services such as Sentry.
 
 ## Table of Contents

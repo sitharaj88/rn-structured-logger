@@ -24,6 +24,8 @@ const config: Config = {
   organizationName: 'sitharaj88', // Your GitHub org/user name.
   projectName: 'rn-structured-logger', // Your repo name.
 
+  trailingSlash: true,
+
   onBrokenLinks: 'throw',
 
   // Even if you don't use internationalization, you can use this field to set

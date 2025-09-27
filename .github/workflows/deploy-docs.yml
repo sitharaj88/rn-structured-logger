@@ -21,13 +21,13 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: npm ci
+        run: cd docs-site && npm ci
 
-      - name: Generate docs
-        run: npm run docs
+      - name: Build Docusaurus site
+        run: cd docs-site && npm run build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
+          publish_dir: ./docs-site/build

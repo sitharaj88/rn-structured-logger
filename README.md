@@ -21,7 +21,7 @@ An enterprise-grade logging library for React Native, Expo, and cross-platform J
   - [Flushing and Disposing](#flushing-and-disposing)
 - [Transports](#transports)
 - [Configuration Options](#configuration-options)
-- [API Reference](#api-reference)
+ - [Documentation](#documentation)
 - [Examples](#examples)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
@@ -315,27 +315,13 @@ interface LoggerConfig {
 }
 ```
 
-## API Reference
+## Documentation
 
-### Core Functions
+Full documentation for this project is hosted as a Docusaurus site and can be found at:
 
-- `initLogger(config: LoggerConfig)`: Initialize the logger with configuration.
-- `getLogger(namespace?: string)`: Get a logger instance for the specified namespace.
+- https://sitharaj88.github.io/rn-structured-logger/
 
-### Logger Methods
-
-- `trace(message: string, context?: object)`
-- `debug(message: string, context?: object)`
-- `info(message: string, context?: object)`
-- `warn(message: string, context?: object)`
-- `error(message: string, context?: object)`
-- `setCorrelationId(id?: string)`
-- `flush(): Promise<void>`
-- `dispose(): Promise<void>`
-
-### Utility Functions
-
-- `makeRedactor(keys: string[]): Redactor`: Create a redactor for the specified keys.
+Use the documentation site for API details, guides, and examples.
 
 ## Examples
 

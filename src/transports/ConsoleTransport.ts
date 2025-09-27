@@ -1,10 +1,34 @@
 import { Transport, LogRecord } from '../types';
 
 /**
- * A transport that writes logs to the JavaScript console. It formats each
- * record with an ISO date, namespace and uppercase level. Depending on
- * severity it uses console.debug/info for lower levels and console.warn/error
- * for higher levels.
+ * Console Transport - Writes structured logs to the JavaScript console.
+ *
+ * This transport formats each log record with:
+ * - ISO timestamp: `2024-01-15T10:30:45.123Z`
+ * - Namespace: The logger namespace (e.g., 'auth:login')
+ * - Level: Uppercase severity level (TRACE, DEBUG, INFO, WARN, ERROR, FATAL)
+ * - Message: The log message
+ * - Context: Additional structured data
+ *
+ * Uses appropriate console methods based on severity:
+ * - `console.debug()` for trace/debug levels
+ * - `console.info()` for info level
+ * - `console.warn()` for warn level
+ * - `console.error()` for error/fatal levels
+ *
+ * @example
+ * ```typescript
+ * import { initLogger, ConsoleTransport } from 'rn-structured-logger';
+ *
+ * initLogger({
+ *   level: 'debug',
+ *   transports: [ConsoleTransport]
+ * });
+ *
+ * // Console output will look like:
+ * // [2024-01-15T10:30:45.123Z] app INFO: Application started { correlationId: "req-123" }
+ * // [2024-01-15T10:30:45.124Z] auth:login DEBUG: Attempting login { username: "user@example.com" }
+ * ```
  */
 export const ConsoleTransport: Transport = {
   name: 'console',

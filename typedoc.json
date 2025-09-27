@@ -1,0 +1,31 @@
+{
+  "name": "RN Structured Logger",
+  "out": "docs",
+  "theme": "default",
+  "readme": "README.md",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "includeVersion": true,
+  "hideGenerator": true,
+  "categorizeByGroup": true,
+  "gitRevision": "master",
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true
+  },
+  "searchInComments": true,
+  "cleanOutputDir": true,
+  "entryPoints": [
+    "src/index.ts"
+  ],
+  "sort": [
+    "source-order",
+    "visibility"
+  ],
+  "visibilityFilters": {
+    "protected": false,
+    "private": false
+  },
+  "customCss": "custom.css"
+}

@@ -7,8 +7,43 @@ import { makeRateLimiter } from './utils/rateLimiter';
 const LEVELS: LogLevel[] = ['trace', 'debug', 'info', 'warn', 'error', 'fatal'];
 
 /**
- * The core logger implementation. Instances of this class are created via
- * `initLogger()` and `Logger.child()`. See README.md for usage examples.
+ * Enterprise-grade logger for React Native and Expo applications.
+ *
+ * The Logger class provides structured logging with features like:
+ * - Multiple log levels (trace, debug, info, warn, error, fatal)
+ * - Namespaced child loggers for organized logging
+ * - Automatic batching and asynchronous flushing
+ * - Built-in redaction for sensitive data
+ * - Rate limiting and sampling
+ * - Pluggable transport system
+ * - Correlation ID tracking
+ * - Console patching for third-party library compatibility
+ *
+ * @example
+ * ```typescript
+ * import { initLogger, getLogger, ConsoleTransport } from 'rn-structured-logger';
+ *
+ * // Initialize the logger
+ * initLogger({
+ *   level: 'info',
+ *   transports: [ConsoleTransport]
+ * });
+ *
+ * // Get a logger instance
+ * const logger = getLogger('app');
+ *
+ * // Log messages with different levels
+ * logger.info('Application started successfully');
+ * logger.debug('Processing user request', { userId: 123, action: 'login' });
+ * logger.error('Failed to connect to database', { error: 'Connection timeout' });
+ *
+ * // Create namespaced loggers
+ * const authLogger = getLogger('auth');
+ * const apiLogger = getLogger('api');
+ *
+ * authLogger.info('User authentication successful');
+ * apiLogger.debug('API request completed', { endpoint: '/users', status: 200 });
+ * ```
  */
 export class Logger {
   private cfg: LoggerConfig;
@@ -17,7 +52,17 @@ export class Logger {
 
   /**
    * Creates a new logger instance with the given configuration.
-   * @param cfg - The logger configuration
+   *
+   * @param cfg - The logger configuration object
+   *
+   * @example
+   * ```typescript
+   * const logger = new Logger({
+   *   level: 'debug',
+   *   transports: [ConsoleTransport],
+   *   namespace: 'myapp'
+   * });
+   * ```
    */
   constructor(cfg: LoggerConfig) {
     this.cfg = { ...cfg };
@@ -40,8 +85,24 @@ export class Logger {
 
   /**
    * Creates a child logger with an appended namespace.
-   * @param namespace - The namespace to append (e.g., 'auth')
+   *
+   * Child loggers inherit all configuration from their parent but have
+   * a more specific namespace for better log organization.
+   *
+   * @param namespace - The namespace to append (e.g., 'auth', 'api', 'ui')
    * @returns A new Logger instance with the combined namespace
+   *
+   * @example
+   * ```typescript
+   * const rootLogger = getLogger('app');
+   * const authLogger = rootLogger.child('auth');
+   * const loginLogger = authLogger.child('login');
+   *
+   * // Logs will have namespaces: 'app', 'app:auth', 'app:auth:login'
+   * rootLogger.info('App started');
+   * authLogger.info('Auth module initialized');
+   * loginLogger.info('Login attempt', { username: 'user@example.com' });
+   * ```
    */
   child(namespace: string): Logger {
     const ns = this.cfg.namespace ? `${this.cfg.namespace}:${namespace}` : namespace;
@@ -58,7 +119,25 @@ export class Logger {
 
   /**
    * Sets or clears the correlation ID used for all subsequent log records.
-   * @param id - The correlation ID, or undefined to clear
+   *
+   * Correlation IDs help track related log entries across different parts
+   * of your application, making debugging distributed operations easier.
+   *
+   * @param id - The correlation ID, or undefined to clear the current ID
+   *
+   * @example
+   * ```typescript
+   * const logger = getLogger('api');
+   *
+   * // Set correlation ID for a request
+   * logger.setCorrelationId('req-12345');
+   *
+   * logger.info('Processing API request', { method: 'POST', path: '/users' });
+   * // This log will include correlationId: 'req-12345'
+   *
+   * // Clear correlation ID when request is done
+   * logger.setCorrelationId(undefined);
+   * ```
    */
   setCorrelationId(id?: string): void {
     this.cfg.correlationId = id;
@@ -133,8 +212,29 @@ export class Logger {
 
   /**
    * Logs an info message.
+   *
+   * Info messages are for general information about application operation.
+   * Use this level for important events that are not errors but should be
+   * visible in production logs.
+   *
    * @param msg - The log message
-   * @param ctx - Optional context data
+   * @param ctx - Optional context data to include with the log record
+   *
+   * @example
+   * ```typescript
+   * const logger = getLogger('user');
+   *
+   * // Simple info message
+   * logger.info('User profile updated successfully');
+   *
+   * // Info with context
+   * logger.info('Payment processed', {
+   *   userId: 12345,
+   *   amount: 99.99,
+   *   currency: 'USD',
+   *   transactionId: 'txn_abc123'
+   * });
+   * ```
    */
   info(msg: string, ctx?: Record<string, unknown>): void {
     if (this.allowed('info')) this.process(this.buildRecord('info', msg, ctx));
@@ -151,8 +251,29 @@ export class Logger {
 
   /**
    * Logs an error message.
-   * @param msg - The log message
-   * @param ctx - Optional context data
+   *
+   * Error messages indicate problems that should be investigated.
+   * These are always logged regardless of sampling settings.
+   *
+   * @param msg - The log message describing the error
+   * @param ctx - Optional context data including error details
+   *
+   * @example
+   * ```typescript
+   * const logger = getLogger('api');
+   *
+   * try {
+   *   await processPayment(paymentData);
+   *   logger.info('Payment processed successfully');
+   * } catch (error) {
+   *   logger.error('Payment processing failed', {
+   *     error: error.message,
+   *     userId: paymentData.userId,
+   *     amount: paymentData.amount,
+   *     stack: error.stack
+   *   });
+   * }
+   * ```
    */
   error(msg: string, ctx?: Record<string, unknown>): void {
     if (this.allowed('error')) this.process(this.buildRecord('error', msg, ctx));
@@ -169,7 +290,26 @@ export class Logger {
 
   /**
    * Flushes queued records and underlying transports.
+   *
+   * This method ensures all pending log records are written to their
+   * destinations before continuing. Useful before app shutdown or
+   * when you need to ensure logs are persisted.
+   *
    * @returns A promise that resolves when all flushing is complete
+   *
+   * @example
+   * ```typescript
+   * const logger = getLogger();
+   *
+   * // Log some messages
+   * logger.info('Starting cleanup process');
+   * await performCleanup();
+   * logger.info('Cleanup completed');
+   *
+   * // Ensure all logs are written before exit
+   * await logger.flush();
+   * process.exit(0);
+   * ```
    */
   async flush(): Promise<void> {
     await this.queue.flush();
@@ -178,7 +318,26 @@ export class Logger {
 
   /**
    * Flushes and disposes of transports. After calling this the logger should not be used.
+   *
+   * This method should be called when shutting down the application to ensure
+   * all logs are written and resources are properly cleaned up.
+   *
    * @returns A promise that resolves when disposal is complete
+   *
+   * @example
+   * ```typescript
+   * const logger = getLogger();
+   *
+   * // Application shutdown
+   * process.on('SIGTERM', async () => {
+   *   logger.info('Shutting down gracefully');
+   *
+   *   // Flush and dispose of all transports
+   *   await logger.dispose();
+   *
+   *   process.exit(0);
+   * });
+   * ```
    */
   async dispose(): Promise<void> {
     await this.flush();
